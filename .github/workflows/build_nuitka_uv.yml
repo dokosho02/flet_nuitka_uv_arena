@@ -54,20 +54,28 @@ jobs:
             - name: Build with Nuitka
               shell: bash
               run: |
-                  output_name="dist/app_${{ matrix.target }}${{ matrix.ext }}"
+                  # 确保 dist 目录存在
+                        mkdir -p dist
+
+                  # 仅指定文件名（不含路径）
+                  output_basename="app_${{ matrix.target }}${{ matrix.ext }}"
+
+                  # 构建到当前目录
                   uv run nuitka \
-                    --standalone \
-                    --onefile \
-                    --windows-console-mode=disable \
-                    --output-dir=dist \
-                    --output-filename="$output_name" \
-                    --include-package=flet \
-                    --include-data-dir=assets=assets \
-                    src/main.py
+                  --standalone \
+                  --onefile \
+                  --windows-console-mode=disable \
+                  --output-filename="$output_basename" \
+                  --include-package=flet \
+                  --include-data-dir=assets=assets \
+                  src/main.py
+
+                  # 移动生成的文件到 dist 目录
+                  mv "$output_basename" "dist/"
 
             - name: Upload artifacts
               uses: actions/upload-artifact@v4
               with:
-                  name: ${{ matrix.os }}-${{ matrix.target }}-app
+                  name: app_${{ matrix.target }}${{ matrix.ext }}
                   path: dist/
                   if-no-files-found: error
