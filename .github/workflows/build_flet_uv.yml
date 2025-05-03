@@ -1,4 +1,4 @@
-name: Build with Nuitka
+name: Build with flet
 
 on:
     # push:
@@ -9,7 +9,8 @@ env:
     PROJECT_NAME: flet_nuitka_uv_arena
     PYTHON_VERSION: "3.10"
     UV_VERSION: "0.7.2"
-
+    PYTHONUTF8: "1" # Python使用UTF-8编码
+    SYSTEMROOT: "C:\\Windows" # Windows必要环境变量
 jobs:
     build:
         name: Build (${{ matrix.os }})
@@ -17,18 +18,18 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - os: ubuntu-latest
-                      target: x86_64-unknown-linux-gnu
-                      ext: ""
+                    # - os: ubuntu-latest
+                    #   target: x86_64-unknown-linux-gnu
+                    #   ext: ""
                     - os: windows-latest
                       target: x86_64-pc-windows-msvc
                       ext: ".exe"
-                    - os: macos-latest
-                      target: x86_64-apple-darwin
-                      ext: ""
-                    - os: macos-latest
-                      target: aarch64-apple-darwin
-                      ext: ""
+                    # - os: macos-latest
+                    #   target: x86_64-apple-darwin
+                    #   ext: ""
+                    # - os: macos-latest
+                    #   target: aarch64-apple-darwin
+                    #   ext: ""
 
         steps:
             - name: Checkout code
@@ -51,27 +52,20 @@ jobs:
               run: |
                   uv sync
 
-            - name: Build with Nuitka
+            - name: Fix Windows console encoding
+              if: runner.os == 'Windows'
+              run: |
+                  # 修改控制台编码为UTF-8
+                  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+                  # 设置环境变量防止rich库报错
+                  echo "PYTHONLEGACYWINDOWSSTDIO=utf8" >> $env:GITHUB_ENV
+
+            - name: Build with flet
               shell: bash
               run: |
-                  # 确保 dist 目录存在
-                        mkdir -p dist
+                  uv run flet build windows
 
-                  # 仅指定文件名（不含路径）
-                  output_basename="app_${{ matrix.target }}${{ matrix.ext }}"
-
-                  # 构建到当前目录
-                  uv run nuitka \
-                  --assume-yes-for-downloads \
-                  --standalone \
-                  --onefile \
-                  --windows-console-mode=disable \
-                  --output-filename="$output_basename" \
-                  --include-package=flet \
-                  src/main.py
-
-                  # 移动生成的文件到 dist 目录
-                  mv "$output_basename" "dist/"
+                  tree .
 
             - name: Upload artifacts
               uses: actions/upload-artifact@v4

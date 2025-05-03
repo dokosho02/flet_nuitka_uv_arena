@@ -1,4 +1,4 @@
-name: Build with flet
+name: Build with Nuitka
 
 on:
     # push:
@@ -17,18 +17,18 @@ jobs:
         strategy:
             matrix:
                 include:
-                    # - os: ubuntu-latest
-                    #   target: x86_64-unknown-linux-gnu
-                    #   ext: ""
+                    - os: ubuntu-latest
+                      target: x86_64-unknown-linux-gnu
+                      ext: ""
                     - os: windows-latest
                       target: x86_64-pc-windows-msvc
                       ext: ".exe"
-                    # - os: macos-latest
-                    #   target: x86_64-apple-darwin
-                    #   ext: ""
-                    # - os: macos-latest
-                    #   target: aarch64-apple-darwin
-                    #   ext: ""
+                    - os: macos-latest
+                      target: x86_64-apple-darwin
+                      ext: ""
+                    - os: macos-latest
+                      target: aarch64-apple-darwin
+                      ext: ""
 
         steps:
             - name: Checkout code
@@ -51,16 +51,31 @@ jobs:
               run: |
                   uv sync
 
-            - name: Build with flet
+            - name: Build with Nuitka
               shell: bash
               run: |
-                  uv run flet build windows
+                  # 确保 dist 目录存在
+                        mkdir -p dist
 
-                  tree .
+                  # 仅指定文件名（不含路径）
+                  output_basename="app_${{ matrix.target }}${{ matrix.ext }}"
 
-            # - name: Upload artifacts
-            #   uses: actions/upload-artifact@v4
-            #   with:
-            #       name: app_${{ matrix.target }}${{ matrix.ext }}
-            #       path: dist/
-            #       if-no-files-found: error
+                  # 构建到当前目录
+                  uv run nuitka \
+                  --assume-yes-for-downloads \
+                  --standalone \
+                  --onefile \
+                  --windows-console-mode=disable \
+                  --output-filename="$output_basename" \
+                  --include-package=flet \
+                  src/main.py
+
+                  # 移动生成的文件到 dist 目录
+                  mv "$output_basename" "dist/"
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app_${{ matrix.target }}${{ matrix.ext }}
+                  path: dist/
+                  if-no-files-found: error
