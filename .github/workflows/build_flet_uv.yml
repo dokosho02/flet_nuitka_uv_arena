@@ -65,11 +65,17 @@ jobs:
               run: |
                   uv run flet build windows
 
-                  tree .
+            - name: Create zip archive
+              run: |
+                  $version = (Get-Date -Format "yyyyMMddHHmm")
+                  $zipName = "${{ env.PROJECT_NAME }}_windows_${version}.zip"
+                  Compress-Archive -Path "build\windows\*" -DestinationPath "dist\${zipName}" -Force
 
             - name: Upload artifacts
               uses: actions/upload-artifact@v4
               with:
-                  name: app_${{ matrix.target }}${{ matrix.ext }}
-                  path: dist/
+                  name: windows-app
+                  path: |
+                      dist\*.zip
+                      build\windows\*.exe
                   if-no-files-found: error
