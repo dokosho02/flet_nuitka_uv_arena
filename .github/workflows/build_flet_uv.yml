@@ -63,7 +63,7 @@ jobs:
             - name: Build with flet
               shell: bash
               run: |
-                  mkdrir -p dist
+                  mkdir -p dist
                   uv run flet build windows
                   ls
 
