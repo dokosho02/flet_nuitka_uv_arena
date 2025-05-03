@@ -67,7 +67,6 @@ jobs:
                   --windows-console-mode=disable \
                   --output-filename="$output_basename" \
                   --include-package=flet \
-                  --include-data-dir=assets=assets \
                   src/main.py
 
                   # 移动生成的文件到 dist 目录
