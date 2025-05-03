@@ -67,6 +67,7 @@ jobs:
                   --windows-console-mode=disable \
                   --output-filename="$output_basename" \
                   --include-package=flet \
+                  --assume-yes-for-downloads \  # 关键参数：自动确认下载
                   src/main.py
 
                   # 移动生成的文件到 dist 目录
